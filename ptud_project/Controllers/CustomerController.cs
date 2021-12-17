@@ -4,6 +4,7 @@ using ptud_project.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ptud_project.Controllers
@@ -33,7 +34,6 @@ namespace ptud_project.Controllers
             {
                 return NotFound();
             }
-
         }
 
         [HttpPost("register")]
@@ -52,6 +52,9 @@ namespace ptud_project.Controllers
                         message = "password does not match"
                     });
                 }
+
+                var md5_password = CreateMD5(request.password);
+
                 // hash password before add 
 
                 TimeSpan t = DateTime.Now - new DateTime(1970, 1, 1);
@@ -65,7 +68,7 @@ namespace ptud_project.Controllers
                     address = request.address,
                     phone = request.phone,
                     created_at = secondsSinceEpoch,
-                    password = request.password,
+                    password = md5_password,
                     sex = request.sex
                 };
 
@@ -76,6 +79,46 @@ namespace ptud_project.Controllers
             catch
             {
                 return BadRequest();
+            }
+        }
+
+        [HttpPost("login")]
+        public IActionResult LoginCustomer([FromBody] LoginCustomerModel request)
+        {
+            try
+            {
+                var md5_password_request = CreateMD5(request.password);
+                var customer = _context.Customers.SingleOrDefault(cus => (cus.phone == request.username) && (cus.password == md5_password_request));
+                if (customer != null)
+                {
+                    return Ok(customer);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+
+        public static string CreateMD5(string input)
+        {
+            // Use input string to calculate MD5 hash
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convert the byte array to hexadecimal string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("X2"));
+                }
+                return sb.ToString();
             }
         }
     }

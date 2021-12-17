@@ -1,16 +1,22 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ptud_project.Models
+namespace ptud_project.Data
 {
-    public class RegisterCustomerModel
+    public class Shipper
     {
+        [Key]
+        public Guid id_cus { get; set; }
         [Required]
         [MinLength(1), MaxLength(100)]
         public string name { get; set; }
+        [Required]
+        public Int64 created_at { get; set; }
+        public Int64 update_at { get; set; }
         public string cmnd { get; set; }
         public string address { get; set; }
         [Required]
@@ -20,16 +26,7 @@ namespace ptud_project.Models
         [MinLength(8)]
         public string password { get; set; }
         [Required]
-        [MinLength(8)]
-        public string confirm_password { get; set; }
-        [Required]
-        [Range(0,2)]
+        [Range(0, 2)]
         public Int16 sex { get; set; }
-    }
-
-    public class LoginCustomerModel
-    {
-        public string username { get; set; }
-        public string password { get; set; }
     }
 }

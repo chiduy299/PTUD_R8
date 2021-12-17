@@ -14,9 +14,19 @@ namespace ptud_project.Data
             modelBuilder.Entity<Customer>()
                 .HasIndex(cus => cus.phone)
                 .IsUnique();
+            modelBuilder.Entity<DetailOrder>().HasKey(table => new {
+                table.order_id,
+                table.product_id
+            });
         }
 
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Provider> Providers { get; set; }
+        public DbSet<Area> Areas { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<Payment> Payments { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<ShippingServices> ShippingServices { get; set; }
+        public DbSet<DetailOrder> DetailOrders { get; set; }
     }
 }
