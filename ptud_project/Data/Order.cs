@@ -20,17 +20,25 @@ namespace ptud_project.Data
         [Required]
         public Int16 status { get; set; }
 
-        public Guid? area { get; set; }
+        public string area { get; set; }
         [ForeignKey("area")]
         public Area area_order { get; set; }
 
-        public Guid? shipping_method { get; set; }
-        [ForeignKey("shipping_method")]
-        public ShippingServices shipping { get; set; }
+        public string id_ship { get; set; }
+        [ForeignKey("id_ship")]
+        public ShippingServices Shipping { get; set; }
 
-        public Guid? payment_method { get; set; }
+        public string payment_method { get; set; }
         [ForeignKey("payment_method")]
         public Payment payment { get; set; }
+
+        public Guid? id_customer { get; set; }
+        [ForeignKey("id_customer")]
+        public Customer customer { get; set; }
+
+        public Guid? id_provider { get; set; }
+        [ForeignKey("id_provider")]
+        public Provider provider { get; set; }
 
     }
 

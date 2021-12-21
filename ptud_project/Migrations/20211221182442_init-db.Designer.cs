@@ -10,8 +10,8 @@ using ptud_project.Data;
 namespace ptud_project.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    [Migration("20211217174946_Define_Model_Data")]
-    partial class Define_Model_Data
+    [Migration("20211221182442_init-db")]
+    partial class initdb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -23,9 +23,8 @@ namespace ptud_project.Migrations
 
             modelBuilder.Entity("ptud_project.Data.Area", b =>
                 {
-                    b.Property<Guid>("id_area")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("id_area")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("area_description")
                         .HasColumnType("nvarchar(max)");
@@ -113,20 +112,26 @@ namespace ptud_project.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("area")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("area")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<long>("created_at")
                         .HasColumnType("bigint");
 
+                    b.Property<Guid?>("id_customer")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("id_provider")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("id_ship")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<long>("pay_at")
                         .HasColumnType("bigint");
 
-                    b.Property<Guid?>("payment_method")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("shipping_method")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("payment_method")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<short>("status")
                         .HasColumnType("smallint");
@@ -144,18 +149,21 @@ namespace ptud_project.Migrations
 
                     b.HasIndex("area");
 
-                    b.HasIndex("payment_method");
+                    b.HasIndex("id_customer");
 
-                    b.HasIndex("shipping_method");
+                    b.HasIndex("id_provider");
+
+                    b.HasIndex("id_ship");
+
+                    b.HasIndex("payment_method");
 
                     b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("ptud_project.Data.Payment", b =>
                 {
-                    b.Property<Guid>("id_payment")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("id_payment")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("payment_name")
                         .IsRequired()
@@ -240,9 +248,8 @@ namespace ptud_project.Migrations
 
             modelBuilder.Entity("ptud_project.Data.ShippingServices", b =>
                 {
-                    b.Property<Guid>("id_ship")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("id_ship")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<float>("rating")
                         .HasColumnType("real");
@@ -285,19 +292,31 @@ namespace ptud_project.Migrations
                         .WithMany()
                         .HasForeignKey("area");
 
+                    b.HasOne("ptud_project.Data.Customer", "customer")
+                        .WithMany()
+                        .HasForeignKey("id_customer");
+
+                    b.HasOne("ptud_project.Data.Provider", "provider")
+                        .WithMany()
+                        .HasForeignKey("id_provider");
+
+                    b.HasOne("ptud_project.Data.ShippingServices", "Shipping")
+                        .WithMany()
+                        .HasForeignKey("id_ship");
+
                     b.HasOne("ptud_project.Data.Payment", "payment")
                         .WithMany()
                         .HasForeignKey("payment_method");
 
-                    b.HasOne("ptud_project.Data.ShippingServices", "shipping")
-                        .WithMany()
-                        .HasForeignKey("shipping_method");
-
                     b.Navigation("area_order");
+
+                    b.Navigation("customer");
 
                     b.Navigation("payment");
 
-                    b.Navigation("shipping");
+                    b.Navigation("provider");
+
+                    b.Navigation("Shipping");
                 });
 
             modelBuilder.Entity("ptud_project.Data.Product", b =>

@@ -9,7 +9,7 @@ namespace ptud_project.Data
     public class ShippingServices
     {
         [Key]
-        public Guid id_ship { get; set; }
+        public string id_ship { get; set; }
         [Required]
         [MinLength(1), MaxLength(100)]
         public string shipping_name { get; set; }

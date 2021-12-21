@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ptud_project.Data;
 using ptud_project.Models;
+using ptud_project.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,7 +54,7 @@ namespace ptud_project.Controllers
                     });
                 }
 
-                var md5_password = CreateMD5(request.password);
+                var md5_password = Services.helper.CreateMD5(request.password);
 
                 // hash password before add 
 
@@ -87,7 +88,7 @@ namespace ptud_project.Controllers
         {
             try
             {
-                var md5_password_request = CreateMD5(request.password);
+                var md5_password_request = Services.helper.CreateMD5(request.password);
                 var customer = _context.Customers.SingleOrDefault(cus => (cus.phone == request.username) && (cus.password == md5_password_request));
                 if (customer != null)
                 {
@@ -104,22 +105,5 @@ namespace ptud_project.Controllers
             }
         }
 
-        public static string CreateMD5(string input)
-        {
-            // Use input string to calculate MD5 hash
-            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
-            {
-                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
-                byte[] hashBytes = md5.ComputeHash(inputBytes);
-
-                // Convert the byte array to hexadecimal string
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    sb.Append(hashBytes[i].ToString("X2"));
-                }
-                return sb.ToString();
-            }
-        }
     }
 }

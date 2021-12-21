@@ -9,7 +9,7 @@ namespace ptud_project.Data
     public class Payment
     {
         [Key]
-        public Guid id_payment { get; set; }
+        public string id_payment { get; set; }
         [Required]
         [MinLength(1), MaxLength(100)]
         public string payment_name { get; set; }
