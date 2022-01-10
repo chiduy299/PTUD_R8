@@ -16,6 +16,7 @@ namespace ptud_project.Data
         public string name { get; set; }
         [Required]
         public Int64 created_at { get; set; }
+        public string avatar_url { get; set; }
         public Int64 update_at { get; set; }
         public string cmnd { get; set; }
         public string address { get; set; }

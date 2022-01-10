@@ -43,20 +43,28 @@ namespace ptud_project.Controllers
             try
             {
                 //validate
-
+                // kiem tra sdt dang ky da ton tai chua?
+                // using LinQ [Object] Query
+                var customer_check = _context.Customers.SingleOrDefault(cus => cus.phone == request.phone);
+                if (customer_check != null)
+                {
+                    return Ok(new
+                    {
+                        code = -2,
+                        message = "This phone already exists in datanbase"
+                    }); ;
+                }
                 // check and hash password
                 if (request.password != request.confirm_password)
                 {
                     return Ok(new
                     {
                         code = -1,
-                        message = "password does not match"
+                        message = "Password does not match"
                     });
                 }
-
-                var md5_password = Services.helper.CreateMD5(request.password);
-
                 // hash password before add 
+                var md5_password = Services.helper.CreateMD5(request.password);
 
                 TimeSpan t = DateTime.Now - new DateTime(1970, 1, 1);
                 int secondsSinceEpoch = (int)t.TotalSeconds;
@@ -70,9 +78,10 @@ namespace ptud_project.Controllers
                     phone = request.phone,
                     created_at = secondsSinceEpoch,
                     password = md5_password,
-                    sex = request.sex
+                    sex = request.sex,
+                    avatar_url = request.avatar_url
                 };
-
+                Console.WriteLine(customer);
                 _context.Add(customer);
                 _context.SaveChanges();
                 return Ok(customer);
