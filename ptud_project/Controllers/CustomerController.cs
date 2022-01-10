@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using ptud_project.Data;
 using ptud_project.Models;
 using ptud_project.Services;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,9 +20,10 @@ namespace ptud_project.Controllers
     public class CustomerController : ControllerBase
     {
         private readonly MyDbContext _context;
-
-        public CustomerController(MyDbContext context)
+        private readonly IConfiguration _configuration;
+        public CustomerController(MyDbContext context, IConfiguration configuration)
         {
+            _configuration = configuration;
             _context = context;
         }
 
@@ -68,10 +74,11 @@ namespace ptud_project.Controllers
 
                 TimeSpan t = DateTime.Now - new DateTime(1970, 1, 1);
                 int secondsSinceEpoch = (int)t.TotalSeconds;
+                var id_new = Guid.NewGuid();
                 //add customer
                 var customer = new Customer
                 {
-                    id_cus = Guid.NewGuid(),
+                    id_cus = id_new,
                     name = request.name,
                     cmnd = request.cmnd,
                     address = request.address,
@@ -81,10 +88,17 @@ namespace ptud_project.Controllers
                     sex = request.sex,
                     avatar_url = request.avatar_url
                 };
+
                 Console.WriteLine(customer);
                 _context.Add(customer);
                 _context.SaveChanges();
-                return Ok(customer);
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Register account success",
+                    payload = customer
+                }
+                );
             }
             catch
             {
@@ -101,7 +115,35 @@ namespace ptud_project.Controllers
                 var customer = _context.Customers.SingleOrDefault(cus => (cus.phone == request.username) && (cus.password == md5_password_request));
                 if (customer != null)
                 {
-                    return Ok(customer);
+                    // generateToken
+                    var key = _configuration.GetValue<string>("JwtConfig:Key");
+                    var keyBytes = Encoding.ASCII.GetBytes(key);
+
+                    var tokenHandler = new JwtSecurityTokenHandler();
+
+                    var tokenDecriptor = new SecurityTokenDescriptor()
+                    {
+                        Subject = new ClaimsIdentity(new Claim[]
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, customer.phone),
+                            new Claim("id",customer.id_cus.ToString()),
+                            new Claim("password", customer.password)
+                        }),
+                        Expires = DateTime.UtcNow.AddMinutes(30),
+                        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature)
+                    };
+
+                    var token = tokenHandler.CreateToken(tokenDecriptor);
+                    var login_token = tokenHandler.WriteToken(token);
+                    //
+                    return Ok(new
+                    {
+                        code = 0,
+                        message = "Register account success",
+                        payload = customer,
+                        token = login_token
+                    }
+                );
                 }
                 else
                 {
