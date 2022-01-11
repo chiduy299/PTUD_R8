@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ptud_project.Data;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,8 @@ namespace ptud_project.Controllers
             _context = context;
         }
 
-        [HttpGet("get_order_by_cus/{id}")]
+        [HttpGet("get_order_by_customer")]
+        [Authorize]
         public IActionResult GetOrderByCustomer(string id)
         {
             var id_request = new Guid(id);

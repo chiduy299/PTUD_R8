@@ -27,10 +27,15 @@ namespace ptud_project.Controllers
             _context = context;
         }
 
-        [HttpGet("get_by_id/{id}")]
-        public IActionResult GetCustomerById(string id)
+        [HttpGet("get_info")]
+        [Authorize]
+        public IActionResult GetCustomerById()
         {
-            var id_request = new Guid(id);
+            var id_claim = User.Claims.FirstOrDefault(x => x.Type.Equals("id", StringComparison.InvariantCultureIgnoreCase));
+            if (id_claim == null) {
+                return NotFound();
+            }
+            var id_request = new Guid(id_claim.Value.ToString());
             // using LinQ [Object] Query
             var customer = _context.Customers.SingleOrDefault(cus => cus.id_cus == id_request);
             if (customer != null )
@@ -139,7 +144,7 @@ namespace ptud_project.Controllers
                     return Ok(new
                     {
                         code = 0,
-                        message = "Register account success",
+                        message = "Login success",
                         payload = customer,
                         token = login_token
                     }
