@@ -21,9 +21,14 @@ namespace ptud_project.Controllers
 
         [HttpGet("get_order_by_customer")]
         [Authorize]
-        public IActionResult GetOrderByCustomer(string id)
+        public IActionResult GetOrderByCustomer()
         {
-            var id_request = new Guid(id);
+            var id_claim = User.Claims.FirstOrDefault(x => x.Type.Equals("id", StringComparison.InvariantCultureIgnoreCase));
+            if (id_claim == null)
+            {
+                return NotFound();
+            }
+            var id_request = new Guid(id_claim.Value.ToString());
             // using LinQ [Object] Query
             var orders_by_cus = from order in _context.Orders
                            where order.id_customer == id_request
