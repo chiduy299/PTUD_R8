@@ -29,5 +29,12 @@ namespace ptud_project.Services
                 return sb.ToString();
             }
         }
+
+        public static int now_to_epoch_time()
+        {
+            TimeSpan t = DateTime.Now - new DateTime(1970, 1, 1);
+            int secondsSinceEpoch = (int)t.TotalSeconds;
+            return secondsSinceEpoch;
+        }
     }
 }

@@ -16,12 +16,14 @@ namespace ptud_project.Data
         public string id { get; set; }
         [Required]
         public Int64 created_at { get; set; }
-        public Int64 update_at { get; set; }
+        public Int64 updated_at { get; set; }
         public Int64 pay_at { get; set; }
         public Int16 total_item { get; set; }
         public Decimal total_amount { get; set; }
         [Required]
         public Int16 status { get; set; }
+        public string note { get; set; }
+        public string reason_cancel { get; set; }
         [Required]
         public string area_id { get; set; }
         [Required]
@@ -32,7 +34,7 @@ namespace ptud_project.Data
         public string customer_id { get; set; }
         [Required]
         public string provider_id { get; set; }
-
+        public string shipper_id { get; set; }
     }
 
     public class DetailOrder

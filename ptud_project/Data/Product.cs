@@ -28,10 +28,13 @@ namespace ptud_project.Data
         [Required]
         public Int64 sell_number { get; set; }
         [Required]
-        public Int16 create_at { get; set; }
-        public Int16 update_at { get; set; }
+        public Int64 created_at { get; set; }
+        public Int64 updated_at { get; set; }
         [Required]
         public string provider_id { get; set; }
+
+        [Required]
+        public bool is_available { get; set; }
 
     }
 }

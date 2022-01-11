@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ptud_project.Models
 {
-    public class UserCredential
+    public class ProviderLoginModel
     {
         public string username { get; set; }
         public string password { get; set; }

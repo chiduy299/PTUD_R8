@@ -20,7 +20,7 @@ namespace ptud_project.Data
         [Required]
         public Int64 created_at { get; set; }
         public string avatar_url { get; set; }
-        public Int64 update_at { get; set; }
+        public Int64 updated_at { get; set; }
         public string cmnd { get; set; }
         public string address { get; set; }
         [Required]
@@ -32,6 +32,14 @@ namespace ptud_project.Data
         [Required]
         [Range(0, 2)]
         public Int16 sex { get; set; }
+        [Required]
+        public bool is_enabled { get; set; }
+        [Required]
+        public Decimal total_amount_paid { get; set; }
 
+        [Required]
+        public Int16 total_orders { get; set; }
+        [Required]
+        public string area_type { get; set; }
     }
 }

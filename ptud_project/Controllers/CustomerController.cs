@@ -78,8 +78,6 @@ namespace ptud_project.Controllers
                 // hash password before add 
                 var md5_password = Services.helper.CreateMD5(request.password);
 
-                TimeSpan t = DateTime.Now - new DateTime(1970, 1, 1);
-                int secondsSinceEpoch = (int)t.TotalSeconds;
                 //add customer
                 var customer = new Customer
                 {
@@ -87,10 +85,14 @@ namespace ptud_project.Controllers
                     cmnd = request.cmnd,
                     address = request.address,
                     phone = request.phone,
-                    created_at = secondsSinceEpoch,
+                    created_at = Services.helper.now_to_epoch_time(),
                     password = md5_password,
                     sex = request.sex,
-                    avatar_url = request.avatar_url
+                    avatar_url = request.avatar_url,
+                    total_amount_paid = 0,
+                    total_orders = 0,
+                    is_enabled = true,
+                    area_type = request.area_type
                 };
 
                 dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").InsertOne(customer);

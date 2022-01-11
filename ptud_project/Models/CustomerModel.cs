@@ -26,6 +26,7 @@ namespace ptud_project.Models
         [Range(0,2)]
         public Int16 sex { get; set; }
         public string avatar_url { get; set; }
+        public string area_type { get; set; }
     }
 
     public class LoginCustomerModel

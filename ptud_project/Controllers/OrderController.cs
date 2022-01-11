@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using static ptud_project.Models.OrderModel;
+using ptud_project.Services;
 
 namespace ptud_project.Controllers
 {
@@ -67,6 +68,156 @@ namespace ptud_project.Controllers
                 message = "Success",
                 payload = resp,
             });
+        }
+
+        [HttpPut("cancel/{id}")]
+        public IActionResult CancelOrderById(string id, [FromQuery] string reason)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.id == id).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 0)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not cancel"
+                });
+            }
+            order.status = -1;
+            order.reason_cancel = reason;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").ReplaceOne(x => x.id == id,order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
+        }
+
+        [HttpPut("confirm/{id}")]
+        public IActionResult ConfirmOrderById(string id)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.id == id).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 1)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not confirm"
+                });
+            }
+            order.status = 2;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").ReplaceOne(x => x.id == id, order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
+        }
+
+        [HttpPut("change_status_ship/{id}")]
+        public IActionResult ChangeShippingStatusOrderById(string id)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.id == id).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 2)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not shipping because not confirm"
+                });
+            }
+            order.status = 3;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").ReplaceOne(x => x.id == id, order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
+        }
+
+        [HttpPut("change_status_success/{id}")]
+        public IActionResult ChangeSuccessStatusOrderById(string id)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.id == id).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 3)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not change status to success"
+                });
+            }
+            order.status = 4;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").ReplaceOne(x => x.id == id, order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
+        }
+
+        [HttpGet("get_delivery_history")]
+        public IActionResult GetDeliveryHistoryByShipper([FromQuery] string id_shipper)
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var orders = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.shipper_id == id_shipper && x.status == 4).ToList();
+
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Success",
+                    payload = orders
+                });
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
         }
     }
 
