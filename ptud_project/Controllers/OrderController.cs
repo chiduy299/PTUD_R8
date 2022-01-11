@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using MongoDB.Driver;
 using ptud_project.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static ptud_project.Models.OrderModel;
 
 namespace ptud_project.Controllers
 {
@@ -12,11 +15,10 @@ namespace ptud_project.Controllers
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private readonly MyDbContext _context;
-
-        public OrderController(MyDbContext context)
+        private readonly IConfiguration _configuration;
+        public OrderController(IConfiguration configuration)
         {
-            _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet("get_order_by_customer")]
@@ -26,39 +28,45 @@ namespace ptud_project.Controllers
             var id_claim = User.Claims.FirstOrDefault(x => x.Type.Equals("id", StringComparison.InvariantCultureIgnoreCase));
             if (id_claim == null)
             {
-                return NotFound();
+                return Ok(new { code = -400, message = "Not existing data"});
             }
-            var id_request = new Guid(id_claim.Value.ToString());
-            // using LinQ [Object] Query
-            var orders_by_cus = from order in _context.Orders
-                           where order.id_customer == id_request
-                           select order;
-            if (orders_by_cus.Count() != 0)
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var orders = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.customer_id == id_claim.Value.ToString());
+            return Ok(new
             {
-                return Ok(orders_by_cus);
-            }
-            else
-            {
-                return NotFound();
-            }
+                code = 0,
+                message = "Success",
+                payload = orders,
+            });
         }
 
         [HttpGet("get_detail_order_by_id/{id}")]
         public IActionResult GetDetailOrderById(string id)
         {
-            var id_request = new Guid(id);
-            // using LinQ [Object] Query
-            var detail_orders = from detail in _context.DetailOrders
-                                where detail.order_id == id_request
-                                select detail;
-            if (detail_orders.Count() != 0)
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var details_order = dbClient.GetDatabase("ptudhttt").GetCollection<DetailOrder>("DetailOrders").AsQueryable().Where(x => x.order_id == id);
+            List<GetDetailOrderResponse> resp = new List<GetDetailOrderResponse>();
+            foreach (var order in details_order)
             {
-                return Ok(detail_orders);
+                var product = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.id == order.product_id).SingleOrDefault();
+                resp.Add(new GetDetailOrderResponse
+                {
+                    product_id = product.id,
+                    product_name = product.product_name,
+                    rating = product.rating,
+                    unit_price = product.unit_price,
+                    unit_product_name = product.unit_product_name,
+                    quantity = order.quantity,
+                    total = order.total
+                }
+                );
             }
-            else
+            return Ok(new
             {
-                return NotFound();
-            }
+                code = 0,
+                message = "Success",
+                payload = resp,
+            });
         }
     }
 

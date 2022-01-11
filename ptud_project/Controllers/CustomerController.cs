@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using ptud_project.Data;
 using ptud_project.Models;
 using ptud_project.Services;
@@ -19,12 +20,10 @@ namespace ptud_project.Controllers
     [ApiController]
     public class CustomerController : ControllerBase
     {
-        private readonly MyDbContext _context;
         private readonly IConfiguration _configuration;
-        public CustomerController(MyDbContext context, IConfiguration configuration)
+        public CustomerController(IConfiguration configuration)
         {
             _configuration = configuration;
-            _context = context;
         }
 
         [HttpGet("get_info")]
@@ -33,18 +32,18 @@ namespace ptud_project.Controllers
         {
             var id_claim = User.Claims.FirstOrDefault(x => x.Type.Equals("id", StringComparison.InvariantCultureIgnoreCase));
             if (id_claim == null) {
-                return NotFound();
+                return Ok(new { code = -400, message = "Not existing data"});
             }
-            var id_request = new Guid(id_claim.Value.ToString());
-            // using LinQ [Object] Query
-            var customer = _context.Customers.SingleOrDefault(cus => cus.id_cus == id_request);
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var filter = Builders<Customer>.Filter.Eq("Id", id_claim);
+            var customer = dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").AsQueryable().Where(x => x.id == id_claim.Value.ToString()).FirstOrDefault();
             if (customer != null )
             {
                 return Ok(customer);
             }
             else
             {
-                return NotFound();
+                return Ok(new { code = -400, message = "Not existing data"});
             }
         }
 
@@ -55,14 +54,16 @@ namespace ptud_project.Controllers
             {
                 //validate
                 // kiem tra sdt dang ky da ton tai chua?
-                // using LinQ [Object] Query
-                var customer_check = _context.Customers.SingleOrDefault(cus => cus.phone == request.phone);
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var filter = Builders<Customer>.Filter.Eq("phone", request.phone);
+                var customer_check = dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").AsQueryable().Where(x => x.phone == request.phone).FirstOrDefault();
+                Console.WriteLine(customer_check);
                 if (customer_check != null)
                 {
                     return Ok(new
                     {
                         code = -2,
-                        message = "This phone already exists in datanbase"
+                        message = "This phone already exists in database",
                     }); ;
                 }
                 // check and hash password
@@ -79,11 +80,9 @@ namespace ptud_project.Controllers
 
                 TimeSpan t = DateTime.Now - new DateTime(1970, 1, 1);
                 int secondsSinceEpoch = (int)t.TotalSeconds;
-                var id_new = Guid.NewGuid();
                 //add customer
                 var customer = new Customer
                 {
-                    id_cus = id_new,
                     name = request.name,
                     cmnd = request.cmnd,
                     address = request.address,
@@ -94,9 +93,7 @@ namespace ptud_project.Controllers
                     avatar_url = request.avatar_url
                 };
 
-                Console.WriteLine(customer);
-                _context.Add(customer);
-                _context.SaveChanges();
+                dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").InsertOne(customer);
                 return Ok(new
                 {
                     code = 0,
@@ -107,7 +104,7 @@ namespace ptud_project.Controllers
             }
             catch
             {
-                return BadRequest();
+                return Ok(new { code = -401, message = "Bad Request"});
             }
         }
 
@@ -116,8 +113,13 @@ namespace ptud_project.Controllers
         {
             try
             {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+
                 var md5_password_request = Services.helper.CreateMD5(request.password);
-                var customer = _context.Customers.SingleOrDefault(cus => (cus.phone == request.username) && (cus.password == md5_password_request));
+                var customer = dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers")
+                    .AsQueryable().Where(x => x.phone == request.username && x.password == md5_password_request)
+                    .FirstOrDefault();
+
                 if (customer != null)
                 {
                     // generateToken
@@ -131,7 +133,7 @@ namespace ptud_project.Controllers
                         Subject = new ClaimsIdentity(new Claim[]
                         {
                             new Claim(ClaimTypes.NameIdentifier, customer.phone),
-                            new Claim("id",customer.id_cus.ToString()),
+                            new Claim("id",customer.id.ToString()),
                             new Claim("password", customer.password)
                         }),
                         Expires = DateTime.UtcNow.AddMinutes(30),
@@ -152,12 +154,12 @@ namespace ptud_project.Controllers
                 }
                 else
                 {
-                    return NotFound();
+                    return Ok(new { code = -400, message = "Not existing data"});
                 }
             }
             catch
             {
-                return BadRequest();
+                return Ok(new { code = -401, message = "Bad Request"});
             }
         }
 
