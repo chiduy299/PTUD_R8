@@ -37,5 +37,7 @@ namespace ptud_project.Data
 
         [Required]
         public Int32 number_order_delivered { get; set; }
+        [Required]
+        public string area_type { get; set; }
     }
 }

@@ -37,6 +37,7 @@ namespace ptud_project.Controllers
                         message = "This phone already exists in database",
                     }); ;
                 }
+
                 // check and hash password
                 if (request.password != request.confirm_password)
                 {
@@ -61,7 +62,9 @@ namespace ptud_project.Controllers
                     sex = request.sex,
                     avatar_url = request.avatar_url,
                     is_enabled = false,
-                    number_order_delivered = 0
+                    number_order_delivered = 0,
+                    //ko can check area_type vi giao dien fe cho chon theo selection query tu DB
+                    area_type = request.area_type
                 };
 
                 dbClient.GetDatabase("ptudhttt").GetCollection<Shipper>("Shippers").InsertOne(shipper);
