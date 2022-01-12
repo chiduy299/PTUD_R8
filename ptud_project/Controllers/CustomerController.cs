@@ -57,7 +57,6 @@ namespace ptud_project.Controllers
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
                 var filter = Builders<Customer>.Filter.Eq("phone", request.phone);
                 var customer_check = dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").AsQueryable().Where(x => x.phone == request.phone).FirstOrDefault();
-                Console.WriteLine(customer_check);
                 if (customer_check != null)
                 {
                     return Ok(new
@@ -82,8 +81,12 @@ namespace ptud_project.Controllers
                 var customer = new Customer
                 {
                     name = request.name,
+                    email = request.email,
                     cmnd = request.cmnd,
-                    address = request.address,
+                    district = request.district,
+                    street = request.street,
+                    city = request.city,
+                    ward = request.ward,
                     phone = request.phone,
                     created_at = Services.helper.now_to_epoch_time(),
                     password = md5_password,
@@ -107,6 +110,75 @@ namespace ptud_project.Controllers
             catch
             {
                 return Ok(new { code = -401, message = "Bad Request"});
+            }
+        }
+
+        [HttpPut("update/{id}")]
+        public IActionResult UpdateCustomer(string id, [FromBody] UpdateCustomerModel request)
+        {
+            try
+            {
+                //validate
+                // kiem tra sdt dang ky da ton tai chua?
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var customer = dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").AsQueryable().Where(x => x.id == id).FirstOrDefault();
+                if (customer == null)
+                {
+                    return Ok(new
+                    {
+                        code = -2,
+                        message = "Not existing data",
+                    });
+                }
+                // check and hash password
+                if (request.password != null && request.confirm_password != null)
+                {
+                    if(request.password == request.confirm_password)
+                    {
+                        customer.password = Services.helper.CreateMD5(request.password);
+                    }
+                    else
+                        return Ok(new
+                        {
+                            code = -2,
+                            message = "Password does not match",
+                        });
+
+                }
+
+                if (request.name != null && request.name.Length != 0)
+                    customer.name = request.name;
+                if (request.email != null && request.email.Length != 0)
+                    customer.email = request.email;
+                if (request.cmnd != null && request.cmnd.Length != 0)
+                    customer.cmnd = request.cmnd;
+                if (request.district != null && request.district.Length != 0)
+                    customer.district = request.district;
+                if (request.street != null && request.street.Length != 0)
+                    customer.street = request.street;
+                if (request.city != null && request.city.Length != 0)
+                    customer.city = request.city;
+                if (request.ward != null && request.ward.Length != 0)
+                    customer.ward = request.ward;
+                if (request.sex != 0 && request.sex.ToString().Length != 0)
+                    customer.sex = request.sex;
+                if (request.avatar_url != null && request.avatar_url.Length != 0)
+                    customer.avatar_url = request.avatar_url;
+                if (request.area_type != null && request.area_type.Length != 0)
+                    customer.area_type = request.area_type;
+                customer.updated_at = helper.now_to_epoch_time();
+                dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").FindOneAndReplace(x=> x.id == id,customer);
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Register account success",
+                    payload = customer
+                }
+                );
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
             }
         }
 

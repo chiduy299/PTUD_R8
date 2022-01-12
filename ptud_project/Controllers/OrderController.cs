@@ -41,6 +41,26 @@ namespace ptud_project.Controllers
             });
         }
 
+        [HttpGet("get_all_order_store")]
+        public IActionResult GetAllOrderStore([FromQuery] string store_id)
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var orders = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.provider_id == store_id).ToList();
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Success",
+                    payload = orders
+                });
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
+        }
+
         [HttpGet("get_detail_order_by_id/{id}")]
         public IActionResult GetDetailOrderById(string id)
         {

@@ -11,8 +11,12 @@ namespace ptud_project.Models
         [Required]
         [MinLength(1), MaxLength(100)]
         public string name { get; set; }
+        public string email { get; set; }
         public string cmnd { get; set; }
-        public string address { get; set; }
+        public string district { get; set; }
+        public string street { get; set; }
+        public string city { get; set; }
+        public string ward { get; set; }
         [Required]
         [MaxLength(11)]
         public string phone { get; set; }
@@ -27,6 +31,22 @@ namespace ptud_project.Models
         public Int16 sex { get; set; }
         public string avatar_url { get; set; }
         [Required]
+        public string area_type { get; set; }
+    }
+
+    public class UpdateCustomerModel
+    {
+        public string name { get; set; }
+        public string email { get; set; }
+        public string cmnd { get; set; }
+        public string district { get; set; }
+        public string street { get; set; }
+        public string city { get; set; }
+        public string ward { get; set; }
+        public string password { get; set; }
+        public string confirm_password { get; set; }
+        public Int16 sex { get; set; }
+        public string avatar_url { get; set; }
         public string area_type { get; set; }
     }
 

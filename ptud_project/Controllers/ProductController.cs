@@ -22,16 +22,23 @@ namespace ptud_project.Controllers
         }
 
         [HttpGet("get_all")]
-        public IActionResult GetAllProductByProvideId([FromQuery] string provider_id)
+        public IActionResult GetAllProductByProvideId([FromQuery] string provider_id, [FromQuery] int page, [FromQuery] int limit)
         {
-            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-            var list_product = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").Find(_ => true).ToList();
-            return Ok(new
+            try
             {
-                code = 0,
-                message = "Success",
-                payload = list_product,
-            });
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var list_product = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").Find(x => x.provider_id == provider_id).Skip(page*limit).Limit(limit).ToList();
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Success",
+                    payload = list_product
+                });
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
         }
 
         [HttpPut("update/{id}")]
@@ -108,5 +115,30 @@ namespace ptud_project.Controllers
             });
         }
 
+        [HttpGet("get_by_category/{id}")]
+        public IActionResult GetProductbyCategory(string id_category)
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var list_product = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.id_category == id_category).ToList();
+                if (list_product == null)
+                    return Ok(new
+                    {
+                        code = -1,
+                        message = "Not existing data"
+                    });
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Success",
+                    payload = list_product
+                });
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
+        }
     }
 }

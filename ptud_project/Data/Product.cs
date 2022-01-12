@@ -20,7 +20,7 @@ namespace ptud_project.Data
         [Required]
         public float rating { get; set; }
         [Required]
-        public Decimal unit_price { get; set; }
+        public Double unit_price { get; set; }
         [Required]
         public string unit_product_name { get; set; }
         [Required]
@@ -32,9 +32,11 @@ namespace ptud_project.Data
         public Int64 updated_at { get; set; }
         [Required]
         public string provider_id { get; set; }
-
         [Required]
         public bool is_available { get; set; }
+
+        [Required]
+        public string id_category { get; set; }
 
     }
 }

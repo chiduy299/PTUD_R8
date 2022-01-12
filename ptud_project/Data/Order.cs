@@ -19,7 +19,7 @@ namespace ptud_project.Data
         public Int64 updated_at { get; set; }
         public Int64 pay_at { get; set; }
         public Int16 total_item { get; set; }
-        public Decimal total_amount { get; set; }
+        public Double total_amount { get; set; }
         [Required]
         public Int16 status { get; set; }
         public string note { get; set; }

@@ -11,6 +11,8 @@ using static ptud_project.Models.ShipperModel;
 
 namespace ptud_project.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ShipperController : Controller
     {
         private readonly IConfiguration _configuration;

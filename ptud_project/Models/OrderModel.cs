@@ -13,7 +13,7 @@ namespace ptud_project.Models
             public string product_name { get; set; }
             public float rating { get; set; }
             public string unit_product_name { get; set; }
-            public Decimal unit_price { get; set; }
+            public Double unit_price { get; set; }
             public Int16 quantity { get; set; }
             public Int64 total { get; set; }
         }
