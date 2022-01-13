@@ -48,7 +48,7 @@ namespace ptud_project
                 authOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             }).AddJwtBearer(jwtOptions =>
             {
-                var key = Configuration.GetValue<string>("JwtConfig:Key");
+                var key = Configuration.GetValue<string>("JwtConfig");
                 var keyBytes = Encoding.ASCII.GetBytes(key);
                 jwtOptions.SaveToken = true;
                 jwtOptions.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
