@@ -265,7 +265,7 @@ namespace ptud_project.Controllers
                     sum_item += quantity;
                 }
 
-                Guid order_id = Guid.NewGuid();
+                string order_id = "OD"+ helper.now_to_epoch_time();
                 // them order
                 var order = new Order
                 {
@@ -333,7 +333,7 @@ namespace ptud_project.Controllers
                                 + "&extraData=" + ""
                                 + "&ipnUrl=" + ipn_url
                                 + "&orderId=" + order_id
-                                + "&orderInfo=" + "Don hang cua sundara"
+                                + "&orderInfo=" + "Don hang cua R8"
                                 + "&partnerCode=" + partner_code
                                 + "&redirectUrl=" + return_url
                                 + "&requestId=" + order_id
@@ -345,19 +345,19 @@ namespace ptud_project.Controllers
                     requestId = order_id,
                     amount = (Int64)amount,
                     orderId = order_id,
-                    orderInfo = "Don hang cua chung toi",
+                    orderInfo = "Don hang cua R8",
                     redirectUrl = return_url,
                     ipnUrl = ipn_url,
                     requestType = type_purchase,
                     signature = signature,
                     extraData = "",
+                    lang = "vi"
                 };
                 string jsonString = JsonSerializer.Serialize(myjson);
-
                 using (var client = new HttpClient())
                 {
                     var response = await client.PostAsync(
-                        "https://test-payment.momo.vn/gw_payment/transactionProcessor",
+                        "https://test-payment.momo.vn/v2/gateway/api/create",
                          new StringContent(jsonString, Encoding.UTF8, "application/json"));
                     var result = await response.Content.ReadAsStringAsync();
                     return result;
@@ -365,7 +365,6 @@ namespace ptud_project.Controllers
             }
             catch
             {
-                Console.WriteLine("error");
                 return "";
             }
         }

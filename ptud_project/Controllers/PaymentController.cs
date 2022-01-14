@@ -32,7 +32,7 @@ namespace ptud_project.Controllers
                 var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.order_id == request.orderId && x.status == 0).FirstOrDefault();
                 if (order == null)
                     return Ok(new { code = -1, message = "Not existing data" });
-                if (request.errorCode != "0")
+                if (request.resultCode != 0)
                     return Ok(new { code = -1, message = "Invalid result code" });
                 var rawHash = "accessKey=" + access_key
                 + "&amount=" + request.amount.ToString()
@@ -45,22 +45,22 @@ namespace ptud_project.Controllers
                 + "&payType=" + request.payType
                 + "&requestId=" + request.requestId
                 + "&responseTime=" + request.responseTime
-                + "&errorCode=" + request.errorCode
+                + "&resultCode=" + request.resultCode
                 + "&transId=" + request.transId;
                 var signature = Services.helper.GetHMAC(rawHash, secret_key);
                 if (signature != request.signature)
                     return Ok(new { code = -1, message = "Invalid signature" });
                 order.status = 1;
                 order.updated_at = Services.helper.now_to_epoch_time();
-                dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").FindOneAndReplace(x => x.id == request.orderId, order);
+                dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").FindOneAndReplace(x => x.order_id == request.orderId, order);
                 return Ok(new {
                     code = 0,
                     message = "Success",
                 });
             }
-            catch
+            catch(Exception e)
             {
-                return Ok(new { code = -401, message = "Bad Request" });
+                return Ok(new { code = -401, message = e });
             }
         }
     }
