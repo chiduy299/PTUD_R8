@@ -151,16 +151,17 @@ namespace ptud_project.Controllers
                 var shipper = dbClient.GetDatabase("ptudhttt").GetCollection<Shipper>("Shippers").AsQueryable().Where(x => x.id == id_shipper).FirstOrDefault();
                 if (shipper == null)
                     return Ok(new { code = -1, message = "Not exising data shipper" });
-                var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.id == id_order).FirstOrDefault();
+                var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.order_id == id_order).FirstOrDefault();
                 if (order == null)
                     return Ok(new { code = -1, message = "Not exising data order" });
                 //kiem tra status shipper
                 if (shipper.is_enabled == false)
                     return Ok(new { code = -1, message = "Shipper can not receiver order" });
                 //kiem tra status order co ready to change ko? (status phai ==2 nghia la store da xac nhan)
-                if (order.status != 2)
+                if (order.status != 3)
                     return Ok(new { code = -1, message = "Order can not receive" });
-                order.status = 3;
+                order.status = 4;
+                order.shipper_id = id_shipper;
                 order.updated_at = helper.now_to_epoch_time();
                 dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").FindOneAndReplace(x => x.id == id_order, order);
                 return Ok(new
@@ -174,6 +175,38 @@ namespace ptud_project.Controllers
             {
                 return Ok(new { code = -401, message = "Bad Request" });
             }
+        }
+
+        [HttpPut("successs_order/{id_shipper}/{id_order}")]
+        public IActionResult ChangeSuccessStatusOrderById(string id_shipper, string id_order)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.order_id == id_order && x.shipper_id == id_shipper).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 4)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not change status to success"
+                });
+            }
+            order.status = 5;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").ReplaceOne(x => x.order_id == id_order, order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
         }
     }
 }

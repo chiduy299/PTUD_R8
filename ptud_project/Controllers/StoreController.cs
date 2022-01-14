@@ -226,5 +226,69 @@ namespace ptud_project.Controllers
                 return Ok(new { code = -401, message = "Bad Request" });
             }
         }
+
+        [HttpPut("confirm_order/{id_store}/{id_order}")]
+        public IActionResult ConfirmOrderById(string id_store, string id_order)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.store_id == id_store && x.order_id == id_order).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 1)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not confirm"
+                });
+            }
+            order.status = 2;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").FindOneAndReplace(x => x.order_id == id_order, order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
+        }
+
+        [HttpPut("request_shipping/{id_store}/{id_order}")]
+        public IActionResult ChangeShippingStatusOrderById(string id_store, string id_order)
+        {
+            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+            var order = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.store_id == id_store && x.order_id == id_order).FirstOrDefault();
+            if (order == null)
+            {
+                return Ok(new
+                {
+                    code = -400,
+                    message = "Not existing data"
+                });
+            }
+            if (order.status != 2)
+            {
+                return Ok(new
+                {
+                    code = -1,
+                    message = "This order can not shipping because not confirm"
+                });
+            }
+            order.status = 3;
+            order.updated_at = helper.now_to_epoch_time();
+            dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").FindOneAndReplace(x => x.order_id == id_order, order);
+
+            return Ok(new
+            {
+                code = 0,
+                message = "Success"
+            });
+        }
     }
 }
