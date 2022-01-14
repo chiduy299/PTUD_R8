@@ -27,7 +27,6 @@ namespace ptud_project.Controllers
         }
 
         [HttpGet("get_info")]
-        [Authorize]
         public IActionResult GetCustomerById()
         {
             var id_claim = User.Claims.FirstOrDefault(x => x.Type.Equals("id", StringComparison.InvariantCultureIgnoreCase));
