@@ -148,8 +148,8 @@ namespace ptud_project.Controllers
             {
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
                 var filter = Builders<Product>.Filter.Eq("product_name", request.product_name);
-                var customer_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Customers").AsQueryable().Where(x => x.product_name == request.product_name).FirstOrDefault();
-                if (customer_check != null)
+                var product_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Customers").AsQueryable().Where(x => x.product_name == request.product_name && x.provider_id == request.provider_id).FirstOrDefault();
+                if (product_check != null)
                 {
                     return Ok(new
                     {
@@ -170,7 +170,7 @@ namespace ptud_project.Controllers
                     provider_id = request.provider_id,
                     created_at = Services.helper.now_to_epoch_time(),
                     updated_at = Services.helper.now_to_epoch_time(),
-                    avatar_url = request.avatar_url,
+                    images = request.list_images,
                     is_available = true,
                 };
 

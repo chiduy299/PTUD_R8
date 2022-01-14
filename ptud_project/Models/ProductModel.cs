@@ -13,7 +13,7 @@ namespace ptud_project.Models
         public Double unit_price { get; set; }
         public string unit_product_name { get; set; }
         public string product_category { get; set; }
-        public string avatar_url { get; set; }
+        public List<string> list_images { get; set; }
         public string provider_id { get; set; }
     }
     public class ProductUpdateModel

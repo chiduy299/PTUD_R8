@@ -52,6 +52,24 @@ namespace ptud_project.Controllers
             try
             {
                 //validate
+                if (request.phone == null || request.phone.Length == 0)
+                    return Ok(new
+                    {
+                        code = -1,
+                        message = "Invalid phone",
+                    });
+                if (request.name == null || request.name.Length == 0)
+                    return Ok(new
+                    {
+                        code = -1,
+                        message = "Invalid name",
+                    }); ;
+                if (request.area_type == null || request.area_type.Length == 0)
+                    return Ok(new
+                    {
+                        code = -1,
+                        message = "Invalid area_type",
+                    }); ;
                 // kiem tra sdt dang ky da ton tai chua?
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
                 var filter = Builders<Customer>.Filter.Eq("phone", request.phone);

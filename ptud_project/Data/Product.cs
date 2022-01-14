@@ -39,7 +39,7 @@ namespace ptud_project.Data
         public string id_category { get; set; }
 
         [Required]
-        public string avatar_url { get; set; }
+        public List<string> images { get; set; }
 
     }
 }

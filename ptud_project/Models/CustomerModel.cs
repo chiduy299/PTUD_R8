@@ -8,7 +8,6 @@ namespace ptud_project.Models
 {
     public class RegisterCustomerModel
     {
-        [Required]
         [MinLength(1), MaxLength(100)]
         public string name { get; set; }
         public string email { get; set; }
@@ -17,20 +16,15 @@ namespace ptud_project.Models
         public string street { get; set; }
         public string city { get; set; }
         public string ward { get; set; }
-        [Required]
         [MaxLength(11)]
         public string phone { get; set; }
-        [Required]
         [MinLength(8)]
         public string password { get; set; }
-        [Required]
         [MinLength(8)]
         public string confirm_password { get; set; }
-        [Required]
         [Range(0,2)]
         public Int16 sex { get; set; }
         public string avatar_url { get; set; }
-        [Required]
         public string area_type { get; set; }
     }
 
