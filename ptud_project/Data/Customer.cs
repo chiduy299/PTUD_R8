@@ -31,7 +31,6 @@ namespace ptud_project.Data
         [MaxLength(11)]
         public string phone { get; set; }
         [Required]
-        [MinLength(8)]
         public string password { get; set; }
         [Required]
         [Range(0, 2)]

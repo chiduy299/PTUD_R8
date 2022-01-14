@@ -214,7 +214,7 @@ namespace ptud_project.Controllers
                 if (customer != null)
                 {
                     // generateToken
-                    var key = _configuration.GetValue<string>("JwtConfig:Key");
+                    var key = _configuration.GetValue<string>("JwtConfig");
                     var keyBytes = Encoding.ASCII.GetBytes(key);
 
                     var tokenHandler = new JwtSecurityTokenHandler();
