@@ -15,19 +15,28 @@ namespace ptud_project.Data
         public string id { get; set; }
         [Required]
         [MinLength(1), MaxLength(100)]
-        public string store_name { get; set; }
-        [Required]
-        public float rating { get; set; }
-        [Required]
-        public string provider_id { get; set; }
+        public string name { get; set; }
         [Required]
         public Int64 created_at { get; set; }
-        public Int64 update_at { get; set; }
+        public Int64 updated_at { get; set; }
+        public string cmnd { get; set; }
+        public string email { get; set; }
+        public string district { get; set; }
+        public string ward { get; set; }
+        public string street { get; set; }
+        public string city { get; set; }
         [Required]
-        public bool is_available { get; set; }
-        [Required]
+        [MaxLength(11)]
         public string phone { get; set; }
         [Required]
-        public string id_category { get; set; }
+        public string password { get; set; }
+        [Required]
+        public bool is_enabled { get; set; }
+
+        [Required]
+        public Int16 total_orders { get; set; }
+        [Required]
+        public string area_type { get; set; }
+
     }
 }

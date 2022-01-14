@@ -147,14 +147,13 @@ namespace ptud_project.Controllers
             try
             {
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-                var filter = Builders<Product>.Filter.Eq("product_name", request.product_name);
-                var product_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Customers").AsQueryable().Where(x => x.product_name == request.product_name && x.provider_id == request.provider_id).FirstOrDefault();
+                var product_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.product_name == request.product_name && x.provider_id == request.provider_id).FirstOrDefault();
                 if (product_check != null)
                 {
                     return Ok(new
                     {
                         code = -2,
-                        message = "This product already exists in database",
+                        message = "This product already exists in database,  change the name of product",
                     }); ;
                 }
 
@@ -165,7 +164,7 @@ namespace ptud_project.Controllers
                     unit_price = request.unit_price,
                     unit_product_name = request.unit_product_name,
                     id_category = request.product_category,
-                    product_remaining = 0,
+                    product_remaining = request.quantity,
                     sell_number = 0,
                     provider_id = request.provider_id,
                     created_at = Services.helper.now_to_epoch_time(),
@@ -174,7 +173,7 @@ namespace ptud_project.Controllers
                     is_available = true,
                 };
 
-                dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Product").InsertOne(product);
+                dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").InsertOne(product);
                 return Ok(new
                 {
                     code = 0,

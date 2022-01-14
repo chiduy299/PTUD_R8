@@ -15,6 +15,7 @@ namespace ptud_project.Models
         public string product_category { get; set; }
         public List<string> list_images { get; set; }
         public string provider_id { get; set; }
+        public long quantity { get; set; }
     }
     public class ProductUpdateModel
     {

@@ -72,7 +72,6 @@ namespace ptud_project.Controllers
                     }); ;
                 // kiem tra sdt dang ky da ton tai chua?
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-                var filter = Builders<Customer>.Filter.Eq("phone", request.phone);
                 var customer_check = dbClient.GetDatabase("ptudhttt").GetCollection<Customer>("Customers").AsQueryable().Where(x => x.phone == request.phone).FirstOrDefault();
                 if (customer_check != null)
                 {
@@ -188,7 +187,7 @@ namespace ptud_project.Controllers
                 return Ok(new
                 {
                     code = 0,
-                    message = "Register account success",
+                    message = "Update account success",
                     payload = customer
                 }
                 );

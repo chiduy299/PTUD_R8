@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using static ptud_project.Models.OrderModel;
 using ptud_project.Services;
+using MongoDB.Bson;
 
 namespace ptud_project.Controllers
 {
@@ -47,7 +48,7 @@ namespace ptud_project.Controllers
             try
             {
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-                var orders = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.provider_id == store_id).ToList();
+                var orders = dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").AsQueryable().Where(x => x.store_id == store_id).ToList();
                 return Ok(new
                 {
                     code = 0,
@@ -239,6 +240,77 @@ namespace ptud_project.Controllers
                 return Ok(new { code = -401, message = "Bad Request" });
             }
         }
+
+        [HttpPost("create")]
+        public IActionResult CreateOrder([FromBody] CreateOrderRequest request)
+        {
+            try
+            {
+                // kiem tra sdt dang ky da ton tai chua?
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+
+                int sum_item = 0;
+                // kiem tra so luong san pham
+                for (int i = 0; i < request.products.Count(); i++)
+                {
+                    var id_product = request.products[i];
+                    var quantity = request.quantities[i];
+                    var product_db = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.id == id_product).FirstOrDefault();
+                    if (product_db.product_remaining < quantity)
+                        return Ok(new { code = -1, message = product_db.product_name + "is out of stock" });
+                    sum_item += quantity;
+                }
+
+                // them order
+                var order = new Order
+                {
+                    created_at = helper.now_to_epoch_time(),
+                    total_amount = request.total_amount,
+                    status = 0,
+                    total_item = (short)sum_item,
+                    paymnent_method_id = request.payment_method_id,
+                    customer_id = request.customer_id,
+                    store_id = request.store_id
+                };
+                var bsonDocument = order.ToBsonDocument();
+                dbClient.GetDatabase("ptudhttt").GetCollection<BsonDocument>("Orders").InsertOne(bsonDocument);
+                var id_order = bsonDocument["_id"];
+
+                List<DetailOrder> list_detail_order = new List<DetailOrder>();
+                for (int i = 0; i < request.products.Count(); i++)
+                {
+                    var id_product = request.products[i];
+                    var quantity = request.quantities[i];
+                    var product_db = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.id == id_product).FirstOrDefault();
+                    //cap nhat so luong san pham
+                    var quantity_new = product_db.product_remaining - quantity;
+                    product_db.product_remaining = quantity_new;
+                    product_db.sell_number = product_db.sell_number + quantity;
+                    product_db.updated_at = helper.now_to_epoch_time();
+
+                    //them vao detail order
+                    var detail_order = new DetailOrder
+                    {
+                        order_id = id_order.ToString(),
+                        product_id = id_product,
+                        unit_price = product_db.unit_price,
+                        quantity = (short)quantity,
+                        total = (double)(product_db.unit_price * quantity)
+                    };
+                    list_detail_order.Add(detail_order);
+                }
+                dbClient.GetDatabase("ptudhttt").GetCollection<DetailOrder>("DetailOrders").InsertMany(list_detail_order);
+                return Ok(new { code = 0, message = "Successs", payload = "" });
+
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
+        }
+
+
+
     }
 
 }

@@ -25,15 +25,11 @@ namespace ptud_project.Data
         public string note { get; set; }
         public string reason_cancel { get; set; }
         [Required]
-        public string area_id { get; set; }
-        [Required]
-        public string shipping_method_id { get; set; }
-        [Required]
         public string paymnent_method_id { get; set; }
         [Required]
         public string customer_id { get; set; }
         [Required]
-        public string provider_id { get; set; }
+        public string store_id { get; set; }
         public string shipper_id { get; set; }
     }
 
@@ -47,8 +43,8 @@ namespace ptud_project.Data
         public string order_id { get; set; }
         [Required]
         public string product_id { get; set; }
-        public Int64 unit_price { get; set; }
+        public Double unit_price { get; set; }
         public Int16 quantity { get; set; }
-        public Int64 total { get; set; }
+        public Double total { get; set; }
     }
 }

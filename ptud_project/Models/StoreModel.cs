@@ -8,20 +8,29 @@ namespace ptud_project.Models
 {
     public class RegisterStoreModel
     {
-        [Required]
-        [MinLength(1), MaxLength(100)]
-        public string store_name { get; set; }
-        public string product_category { get; set; }
-        public string provider_id { get; set; }
-        [Required]
-        [MaxLength(11)]
+        public string name { get; set; }
+        public string email { get; set; }
+        public string cmnd { get; set; }
+        public string district { get; set; }
+        public string street { get; set; }
+        public string city { get; set; }
+        public string ward { get; set; }
         public string phone { get; set; }
+        public string password { get; set; }
+        public string confirm_password { get; set; }
+        public string area_type { get; set; }
     }
     public class UpdateStoreModel
     {
-        public string store_name { get; set; }
-        public string product_category { get; set; }
-        public string provider_name { get; set; }
-        public string phone { get; set; }
+        public string name { get; set; }
+        public string email { get; set; }
+        public string cmnd { get; set; }
+        public string district { get; set; }
+        public string street { get; set; }
+        public string city { get; set; }
+        public string ward { get; set; }
+        public string password { get; set; }
+        public string confirm_password { get; set; }
+        public string area_type { get; set; }
     }
 }

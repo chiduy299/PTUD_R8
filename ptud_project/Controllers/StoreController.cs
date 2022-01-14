@@ -15,6 +15,8 @@ using System.Text;
 using System.Threading.Tasks;
 namespace ptud_project.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class StoreController : ControllerBase
     {
         private readonly IConfiguration _configuration;
@@ -27,10 +29,10 @@ namespace ptud_project.Controllers
         {
             try
             {
+                // validate
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-                var filter = Builders<Store>.Filter.Eq("phone", request.phone);
-                var customer_check = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Store").AsQueryable().Where(x => x.phone == request.phone).FirstOrDefault();
-                if (customer_check != null)
+                var store_check = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Stores").AsQueryable().Where(x => x.phone == request.phone).FirstOrDefault();
+                if (store_check != null)
                 {
                     return Ok(new
                     {
@@ -38,20 +40,35 @@ namespace ptud_project.Controllers
                         message = "This phone already exists in database",
                     }); ;
                 }
-
+                // check and hash password
+                if (request.password != request.confirm_password)
+                {
+                    return Ok(new
+                    {
+                        code = -1,
+                        message = "Password does not match"
+                    });
+                }
+                // hash password before add 
+                var md5_password = Services.helper.CreateMD5(request.password);
                 var store = new Store
                 {
-                    store_name = request.store_name,
-                    rating = 0,
-                    provider_id = request.provider_id,
-                    id_category = request.product_category,
+                    name = request.name,
+                    email = request.email,
+                    cmnd = request.cmnd,
+                    district = request.district,
+                    street = request.street,
+                    city = request.city,
+                    ward = request.ward,
                     phone = request.phone,
                     created_at = Services.helper.now_to_epoch_time(),
-                    update_at = Services.helper.now_to_epoch_time(),
-                    is_available = true,
+                    password = md5_password,
+                    total_orders = 0,
+                    is_enabled = true,
+                    area_type = request.area_type
                 };
 
-                dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Store").InsertOne(store);
+                dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Stores").InsertOne(store);
                 return Ok(new
                 {
                     code = 0,
@@ -70,18 +87,18 @@ namespace ptud_project.Controllers
         public IActionResult EnableDisableStore(string id_store)
         {
             MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-            var store = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Store").AsQueryable().Where(x => x.id == id_store).FirstOrDefault();
+            var store = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Stores").AsQueryable().Where(x => x.id == id_store).FirstOrDefault();
             if (store == null)
                 return Ok(new
                 {
                     code = -1,
                     message = "Not existing data"
                 });
-            if (store.is_available == true)
-                store.is_available = false;
+            if (store.is_enabled == true)
+                store.is_enabled = false;
             else
-                store.is_available = true;
-            store.update_at = helper.now_to_epoch_time();
+                store.is_enabled = true;
+            store.updated_at = helper.now_to_epoch_time();
             return Ok(new
             {
                 code = 0,
@@ -91,34 +108,123 @@ namespace ptud_project.Controllers
         }
 
         [HttpPut("update/{id}")]
-        public IActionResult UpdateProduct(string id_store, [FromBody] UpdateStoreModel request)
+        public IActionResult UpdateStore(string id_store, [FromBody] UpdateStoreModel request)
         {
-            MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-            var store = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Store").AsQueryable().Where(x => x.id == id_store).FirstOrDefault();
-            if (store == null)
+            try
             {
+                //validate
+                // kiem tra sdt dang ky da ton tai chua?
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var store = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Stores").AsQueryable().Where(x => x.id == id_store).FirstOrDefault();
+                if (store == null)
+                {
+                    return Ok(new
+                    {
+                        code = -2,
+                        message = "Not existing data",
+                    });
+                }
+                // check and hash password
+                if (request.password != null && request.confirm_password != null)
+                {
+                    if (request.password == request.confirm_password)
+                    {
+                        store.password = Services.helper.CreateMD5(request.password);
+                    }
+                    else
+                        return Ok(new
+                        {
+                            code = -2,
+                            message = "Password does not match",
+                        });
+
+                }
+
+                if (request.name != null && request.name.Length != 0)
+                    store.name = request.name;
+                if (request.email != null && request.email.Length != 0)
+                    store.email = request.email;
+                if (request.cmnd != null && request.cmnd.Length != 0)
+                    store.cmnd = request.cmnd;
+                if (request.district != null && request.district.Length != 0)
+                    store.district = request.district;
+                if (request.street != null && request.street.Length != 0)
+                    store.street = request.street;
+                if (request.city != null && request.city.Length != 0)
+                    store.city = request.city;
+                if (request.ward != null && request.ward.Length != 0)
+                    store.ward = request.ward;
+                if (request.area_type != null && request.area_type.Length != 0)
+                    store.area_type = request.area_type;
+                store.updated_at = helper.now_to_epoch_time();
+                dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Stores").FindOneAndReplace(x => x.id == id_store, store);
                 return Ok(new
                 {
-                    code = -1,
-                    message = "Not existing data"
-                });
+                    code = 0,
+                    message = "Update store success",
+                    payload = store
+                }
+                );
             }
-            if (request.store_name != null)
-                store.store_name = request.store_name;
-            if (request.product_category != null)
-                store.provider_id = request.provider_name;
-            if (request.provider_name != null)
-                store.provider_id = request.provider_name;
-            if (request.phone != null)
-                store.phone = request.phone;
-            store.update_at = helper.now_to_epoch_time();
-            dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Store").FindOneAndReplace(x => x.id == id_store, store);
-            return Ok(new
+            catch
             {
-                code = 0,
-                message = "Success",
-                payload = store
-            });
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
+        }
+
+        [HttpPost("login")]
+        public IActionResult LoginStore([FromBody] LoginCustomerModel request)
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+
+                var md5_password_request = Services.helper.CreateMD5(request.password);
+                var store = dbClient.GetDatabase("ptudhttt").GetCollection<Store>("Stores")
+                    .AsQueryable().Where(x => x.phone == request.username && x.password == md5_password_request)
+                    .FirstOrDefault();
+
+                if (store != null)
+                {
+                    // generateToken
+                    var key = _configuration.GetValue<string>("JwtConfig");
+                    var keyBytes = Encoding.ASCII.GetBytes(key);
+
+                    var tokenHandler = new JwtSecurityTokenHandler();
+
+                    var tokenDecriptor = new SecurityTokenDescriptor()
+                    {
+                        Subject = new ClaimsIdentity(new Claim[]
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, store.phone),
+                            new Claim("id",store.id.ToString()),
+                            new Claim("password", store.password)
+                        }),
+                        Expires = DateTime.UtcNow.AddMinutes(30),
+                        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature)
+                    };
+
+                    var token = tokenHandler.CreateToken(tokenDecriptor);
+                    var login_token = tokenHandler.WriteToken(token);
+                    //
+                    return Ok(new
+                    {
+                        code = 0,
+                        message = "Login success",
+                        payload = store,
+                        token = login_token
+                    }
+                );
+                }
+                else
+                {
+                    return Ok(new { code = -400, message = "Not existing data" });
+                }
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
         }
     }
 }
