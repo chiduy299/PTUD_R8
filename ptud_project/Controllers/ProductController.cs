@@ -21,13 +21,13 @@ namespace ptud_project.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet("get_all")]
-        public IActionResult GetAllProductByProvideId([FromQuery] string provider_id, [FromQuery] int page, [FromQuery] int limit)
+        [HttpGet("get_product_store")]
+        public IActionResult GetAllProductByProvideId([FromQuery] string store_id, [FromQuery] int page, [FromQuery] int limit)
         {
             try
             {
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-                var list_product = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").Find(x => x.provider_id == provider_id).Skip(page*limit).Limit(limit).ToList();
+                var list_product = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").Find(x => x.store_id == store_id).Skip(page*limit).Limit(limit).ToList();
                 return Ok(new
                 {
                     code = 0,
@@ -141,13 +141,13 @@ namespace ptud_project.Controllers
             }
         }
 
-        [HttpPost("register")]
+        [HttpPost("create")]
         public IActionResult CreateProduct([FromBody] CreateProductModel request)
         {
             try
             {
                 MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
-                var product_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.product_name == request.product_name && x.provider_id == request.provider_id).FirstOrDefault();
+                var product_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.product_name == request.product_name && x.store_id == request.store_id).FirstOrDefault();
                 if (product_check != null)
                 {
                     return Ok(new
@@ -166,7 +166,7 @@ namespace ptud_project.Controllers
                     id_category = request.product_category,
                     product_remaining = request.quantity,
                     sell_number = 0,
-                    provider_id = request.provider_id,
+                    store_id = request.store_id,
                     created_at = Services.helper.now_to_epoch_time(),
                     updated_at = Services.helper.now_to_epoch_time(),
                     images = request.list_images,

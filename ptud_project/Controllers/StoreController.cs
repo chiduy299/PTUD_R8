@@ -107,7 +107,7 @@ namespace ptud_project.Controllers
             });
         }
 
-        [HttpPut("update/{id}")]
+        [HttpPut("update/{id_store}")]
         public IActionResult UpdateStore(string id_store, [FromBody] UpdateStoreModel request)
         {
             try

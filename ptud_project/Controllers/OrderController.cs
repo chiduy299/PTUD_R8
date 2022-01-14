@@ -10,6 +10,10 @@ using System.Threading.Tasks;
 using static ptud_project.Models.OrderModel;
 using ptud_project.Services;
 using MongoDB.Bson;
+using static ptud_project.Models.Payment;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text;
 
 namespace ptud_project.Controllers
 {
@@ -242,7 +246,7 @@ namespace ptud_project.Controllers
         }
 
         [HttpPost("create")]
-        public IActionResult CreateOrder([FromBody] CreateOrderRequest request)
+        public async Task<IActionResult> CreateOrderAsync([FromBody] CreateOrderRequest request)
         {
             try
             {
@@ -257,13 +261,15 @@ namespace ptud_project.Controllers
                     var quantity = request.quantities[i];
                     var product_db = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").AsQueryable().Where(x => x.id == id_product).FirstOrDefault();
                     if (product_db.product_remaining < quantity)
-                        return Ok(new { code = -1, message = product_db.product_name + "is out of stock" });
+                        return Ok(new { code = -1, message = product_db.product_name + " is out of stock" });
                     sum_item += quantity;
                 }
 
+                Guid order_id = Guid.NewGuid();
                 // them order
                 var order = new Order
                 {
+                    order_id = order_id.ToString(),
                     created_at = helper.now_to_epoch_time(),
                     total_amount = request.total_amount,
                     status = 0,
@@ -272,9 +278,8 @@ namespace ptud_project.Controllers
                     customer_id = request.customer_id,
                     store_id = request.store_id
                 };
-                var bsonDocument = order.ToBsonDocument();
-                dbClient.GetDatabase("ptudhttt").GetCollection<BsonDocument>("Orders").InsertOne(bsonDocument);
-                var id_order = bsonDocument["_id"];
+                dbClient.GetDatabase("ptudhttt").GetCollection<Order>("Orders").InsertOne(order);
+
 
                 List<DetailOrder> list_detail_order = new List<DetailOrder>();
                 for (int i = 0; i < request.products.Count(); i++)
@@ -287,11 +292,12 @@ namespace ptud_project.Controllers
                     product_db.product_remaining = quantity_new;
                     product_db.sell_number = product_db.sell_number + quantity;
                     product_db.updated_at = helper.now_to_epoch_time();
+                    dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Products").FindOneAndReplace(x => x.id == id_product,product_db);
 
                     //them vao detail order
                     var detail_order = new DetailOrder
                     {
-                        order_id = id_order.ToString(),
+                        order_id = order_id.ToString(),
                         product_id = id_product,
                         unit_price = product_db.unit_price,
                         quantity = (short)quantity,
@@ -300,7 +306,9 @@ namespace ptud_project.Controllers
                     list_detail_order.Add(detail_order);
                 }
                 dbClient.GetDatabase("ptudhttt").GetCollection<DetailOrder>("DetailOrders").InsertMany(list_detail_order);
-                return Ok(new { code = 0, message = "Successs", payload = "" });
+                var momo_resp = await request_momo_paymentAsync(order_id.ToString(), request.total_amount);
+                MomoCreatePaymentResponse resp = JsonSerializer.Deserialize<MomoCreatePaymentResponse>(momo_resp);
+                return Ok(new { code = 0, message = "Successs", payload = resp });
 
             }
             catch
@@ -310,7 +318,57 @@ namespace ptud_project.Controllers
         }
 
 
+        private async Task<string> request_momo_paymentAsync(string order_id, Double amount)
+        {
+            try
+            {
+                var partner_code = _configuration.GetValue<string>("MomoConfig:PARTNER_CODE");
+                var access_key = _configuration.GetValue<string>("MomoConfig:ACCESS_KEY");
+                var secret_key = _configuration.GetValue<string>("MomoConfig:SECRET_KEY");
+                var type_purchase = _configuration.GetValue<string>("MomoConfig:TYPE_PURCHASE");
+                var ipn_url = _configuration.GetValue<string>("MomoConfig:NOTIFY_URL");
+                var return_url = _configuration.GetValue<string>("MomoConfig:RETURN_URL");
+                var rawHash = "accessKey=" + access_key
+                                + "&amount=" + amount
+                                + "&extraData=" + ""
+                                + "&ipnUrl=" + ipn_url
+                                + "&orderId=" + order_id
+                                + "&orderInfo=" + "Don hang cua sundara"
+                                + "&partnerCode=" + partner_code
+                                + "&redirectUrl=" + return_url
+                                + "&requestId=" + order_id
+                                + "&requestType=" + type_purchase;
+                var signature = Services.helper.GetHMAC(rawHash,secret_key);
+                var myjson = new MomoCreatePaymentRequest
+                {
+                    partnerCode = partner_code,
+                    requestId = order_id,
+                    amount = (Int64)amount,
+                    orderId = order_id,
+                    orderInfo = "Don hang cua chung toi",
+                    redirectUrl = return_url,
+                    ipnUrl = ipn_url,
+                    requestType = type_purchase,
+                    signature = signature,
+                    extraData = "",
+                };
+                string jsonString = JsonSerializer.Serialize(myjson);
 
+                using (var client = new HttpClient())
+                {
+                    var response = await client.PostAsync(
+                        "https://test-payment.momo.vn/gw_payment/transactionProcessor",
+                         new StringContent(jsonString, Encoding.UTF8, "application/json"));
+                    var result = await response.Content.ReadAsStringAsync();
+                    return result;
+                }
+            }
+            catch
+            {
+                Console.WriteLine("error");
+                return "";
+            }
+        }
     }
 
 }

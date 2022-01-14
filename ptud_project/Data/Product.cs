@@ -31,7 +31,7 @@ namespace ptud_project.Data
         public Int64 created_at { get; set; }
         public Int64 updated_at { get; set; }
         [Required]
-        public string provider_id { get; set; }
+        public string store_id { get; set; }
         [Required]
         public bool is_available { get; set; }
 

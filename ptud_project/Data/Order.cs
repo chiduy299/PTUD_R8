@@ -14,6 +14,7 @@ namespace ptud_project.Data
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string id { get; set; }
+        public string order_id { get; set; }
         [Required]
         public Int64 created_at { get; set; }
         public Int64 updated_at { get; set; }
