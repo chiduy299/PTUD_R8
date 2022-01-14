@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 
 namespace ptud_project.Models
 {
+    public class CreateProductModel
+    {
+        public string product_name { get; set; }
+        public Double unit_price { get; set; }
+        public string unit_product_name { get; set; }
+        public string product_category { get; set; }
+        public string avatar_url { get; set; }
+        public string provider_id { get; set; }
+    }
     public class ProductUpdateModel
     {
         public string product_name { get; set; }

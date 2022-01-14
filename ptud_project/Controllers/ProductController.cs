@@ -140,5 +140,53 @@ namespace ptud_project.Controllers
                 return Ok(new { code = -401, message = "Bad Request" });
             }
         }
+
+        [HttpPost("register")]
+        public IActionResult CreateProduct([FromBody] CreateProductModel request)
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+                var filter = Builders<Product>.Filter.Eq("product_name", request.product_name);
+                var customer_check = dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Customers").AsQueryable().Where(x => x.product_name == request.product_name).FirstOrDefault();
+                if (customer_check != null)
+                {
+                    return Ok(new
+                    {
+                        code = -2,
+                        message = "This product already exists in database",
+                    }); ;
+                }
+
+                var product = new Product
+                {
+                    product_name = request.product_name,
+                    rating = 0,
+                    unit_price = request.unit_price,
+                    unit_product_name = request.unit_product_name,
+                    id_category = request.product_category,
+                    product_remaining = 0,
+                    sell_number = 0,
+                    provider_id = request.provider_id,
+                    created_at = Services.helper.now_to_epoch_time(),
+                    updated_at = Services.helper.now_to_epoch_time(),
+                    avatar_url = request.avatar_url,
+                    is_available = true,
+                };
+
+                dbClient.GetDatabase("ptudhttt").GetCollection<Product>("Product").InsertOne(product);
+                return Ok(new
+                {
+                    code = 0,
+                    message = "Add product success",
+                    payload = product
+                }
+                );
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
+        }
     }
 }
