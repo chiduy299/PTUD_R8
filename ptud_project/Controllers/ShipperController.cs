@@ -1,11 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Driver;
 using ptud_project.Data;
+using ptud_project.Models;
 using ptud_project.Services;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using static ptud_project.Models.ShipperModel;
 
@@ -207,6 +212,61 @@ namespace ptud_project.Controllers
                 code = 0,
                 message = "Success"
             });
+        }
+
+        [HttpPost("login")]
+        public IActionResult LoginShipper([FromBody] LoginCustomerModel request)
+        {
+            try
+            {
+                MongoClient dbClient = new MongoClient(_configuration.GetConnectionString("PtudhtttDB"));
+
+                var md5_password_request = Services.helper.CreateMD5(request.password);
+                var shipper = dbClient.GetDatabase("ptudhttt").GetCollection<Shipper>("Shippers")
+                    .AsQueryable().Where(x => x.phone == request.username && x.password == md5_password_request)
+                    .FirstOrDefault();
+
+                if (shipper != null)
+                {
+                    // generateToken
+                    var key = _configuration.GetValue<string>("JwtConfig");
+                    var keyBytes = Encoding.ASCII.GetBytes(key);
+
+                    var tokenHandler = new JwtSecurityTokenHandler();
+
+                    var tokenDecriptor = new SecurityTokenDescriptor()
+                    {
+                        Subject = new ClaimsIdentity(new Claim[]
+                        {
+                            new Claim(ClaimTypes.NameIdentifier, shipper.phone),
+                            new Claim("id",shipper.id.ToString()),
+                            new Claim("password", shipper.password)
+                        }),
+                        Expires = DateTime.UtcNow.AddMinutes(30),
+                        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(keyBytes), SecurityAlgorithms.HmacSha256Signature)
+                    };
+
+                    var token = tokenHandler.CreateToken(tokenDecriptor);
+                    var login_token = tokenHandler.WriteToken(token);
+                    //
+                    return Ok(new
+                    {
+                        code = 0,
+                        message = "Login success",
+                        payload = shipper,
+                        token = login_token
+                    }
+                );
+                }
+                else
+                {
+                    return Ok(new { code = -400, message = "Not existing data" });
+                }
+            }
+            catch
+            {
+                return Ok(new { code = -401, message = "Bad Request" });
+            }
         }
     }
 }
